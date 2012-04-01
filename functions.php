@@ -1,280 +1,207 @@
 <?php
-
-// include theme options (250) not working yet. 
-include('library/control/options.php');
-
-  // load the custom options
-  global $childoptions;
-  foreach ($childoptions as $value) {
-    $$value['id'] = get_option($value['id'], $value['std']);
-  }
-
-function nmwp_footer_pagelinks() {
-	echo '<ul id="simplepages">';
-	wp_list_pages('depth=1&sort_column=menu_order&title_li=');
-	echo '</ul>';
-}
-if ( function_exists( 'add_theme_support' ) ) {
-	add_theme_support( 'post-formats', array( 'aside', 'link', 'quote' ) );
-}
-
-//Altering the doctype to support FBML and OpenGraph
-function childtheme_create_doctype($content) {
-    $content = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">' . "\n";
-    $content .= '<html xmlns="http://www.w3.org/1999/xhtml"';
-	$content .= 'xmlns:og="http://ogp.me/ns#"';
-	$content .= 'xmlns:fb="https://www.facebook.com/2008/fbml"';
-	return $content;
-}
-add_filter('thematic_create_doctype', 'childtheme_create_doctype');
-
-//Should prob add some other sizes for mobile devices. 
-
-function make_favicon() {
-	echo '<link rel="shortcut icon" href="' . get_bloginfo('stylesheet_directory') . '/library/imgs/favicon.ico" />';
-}
-
-add_action('wp_head', 'make_favicon');
-
-include('library/extensions/standout-extensions.php');
-
-//Adding custom font for headlines.
-function make_fonts() {
-	echo "<link href='http://fonts.googleapis.com/css?family=Nobile:400,700' rel='stylesheet' type='text/css'>";
+function reverie_setup() {
+	// Add language supports. Please note that Reverie Framework does not include language files.
+	load_theme_textdomain('reverie', get_template_directory() . '/lang');
 	
-
+	// Add post thumbnail supports. http://codex.wordpress.org/Post_Thumbnails
+	add_theme_support('post-thumbnails');
+	// set_post_thumbnail_size(150, 150, false);
 	
+	// Add post formarts supports. http://codex.wordpress.org/Post_Formats
+	add_theme_support('post-formats', array('aside', 'gallery', 'link', 'image', 'quote', 'status', 'video', 'audio', 'chat'));
+	
+	// Add menu supports. http://codex.wordpress.org/Function_Reference/register_nav_menus
+	add_theme_support('menus');
+	register_nav_menus(array(
+		'primary_navigation' => __('Primary Navigation', 'reverie'),
+		'utility_navigation' => __('Utility Navigation', 'reverie')
+	));	
+}
+add_action('after_setup_theme', 'reverie_setup');
+
+// create widget areas: sidebar, footer
+$sidebars = array('Sidebar');
+foreach ($sidebars as $sidebar) {
+	register_sidebar(array('name'=> $sidebar,
+		'before_widget' => '<article id="%1$s" class="row widget %2$s"><div class="sidebar-section twelve columns">',
+		'after_widget' => '</div></article>',
+		'before_title' => '<h6><strong>',
+		'after_title' => '</strong></h6>'
+	));
+}
+$sidebars = array('Footer');
+foreach ($sidebars as $sidebar) {
+	register_sidebar(array('name'=> $sidebar,
+		'before_widget' => '<article id="%1$s" class="four columns widget %2$s"><div class="footer-section">',
+		'after_widget' => '</div></article>',
+		'before_title' => '<h6><strong>',
+		'after_title' => '</strong></h6>'
+	));
 }
 
-add_action('wp_head', 'make_fonts');
-	
-//Let's add some nice smooth opengraph functionality here to make sharing content on Facebook easier. 
-
-include('library/extensions/opengraph-extensions.php');
-
-function nmwp_widgets_init() {
-
-	if ( function_exists('register_sidebar') )
-	register_sidebar( array(
-		'name' => __( 'Ad Head Right', 'thematic' ),
-		'id' => 'ad-head-right',
-		'description' => __( 'The upper right widget area. Do not use the title. 180x150px', 'thematic' ),
-		'before_widget' => '',
-		'after_widget' => '',
-		'before_title' => '',
-		'after_title' => '',
-	) );	
-
+// return entry meta information for posts, used by multiple loops.
+function reverie_entry_meta() {
+	echo '<time class="updated" datetime="'. get_the_time('c') .'" pubdate>'. sprintf(__('Posted on %s at %s.', 'reverie'), get_the_time('l, F jS, Y'), get_the_time()) .'</time>';
+	echo '<p class="byline author vcard">'. __('Written by', 'reverie') .' <a href="'. get_author_posts_url(get_the_author_meta('id')) .'" rel="author" class="fn">'. get_the_author() .'</a></p>';
 }
 
-add_action( 'widgets_init', 'nmwp_widgets_init' );
+/* Customized the output of caption, you can remove the filter to restore back to the WP default output. Courtesy of DevPress. http://devpress.com/blog/captions-in-wordpress/ */
+add_filter( 'img_caption_shortcode', 'cleaner_caption', 10, 3 );
 
-//enable the slideshow slider cycler for featured area. 
+function cleaner_caption( $output, $attr, $content ) {
 
-function nmwp_cycler_script() {
+	/* We're not worried abut captions in feeds, so just return the output here. */
+	if ( is_feed() )
+		return $output;
 
+	/* Set up the default arguments. */
+	$defaults = array(
+		'id' => '',
+		'align' => 'alignnone',
+		'width' => '',
+		'caption' => ''
+	);
 
-	echo '<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>';
-	echo '<script type="text/javascript" src="' . get_bloginfo('stylesheet_directory') . '/library/extensions/jquery.cycle.all.js"></script>';
-	?>
-	<script type="text/javascript">
-			
-				$('#featured').cycle({
-					fx: 'fade',
-					delay: 2000,
-					timeout: 7000,
-					autostop: false,
-					pause: true
-					
-				});
-			
-	</script>
-	
-<?php
+	/* Merge the defaults with user input. */
+	$attr = shortcode_atts( $defaults, $attr );
+
+	/* If the width is less than 1 or there is no caption, return the content wrapped between the [caption]< tags. */
+	if ( 1 > $attr['width'] || empty( $attr['caption'] ) )
+		return $content;
+
+	/* Set up the attributes for the caption <div>. */
+	$attributes = ' class="figure ' . esc_attr( $attr['align'] ) . '"';
+
+	/* Open the caption <div>. */
+	$output = '<figure' . $attributes .'>';
+
+	/* Allow shortcodes for the content the caption was created for. */
+	$output .= do_shortcode( $content );
+
+	/* Append the caption text. */
+	$output .= '<figcaption>' . $attr['caption'] . '</figcaption>';
+
+	/* Close the caption </div>. */
+	$output .= '</figure>';
+
+	/* Return the formatted, clean caption. */
+	return $output;
 }
 
-add_action('wp_head', 'nmwp_cycler_script');
-
-//Add bclass so I can change the width of the site at will. 
-
-function childtheme_override_brandingopen() {
-	
-	echo "<div id=\"branding\" class=\"bclass\">\n";
-	
+// Clean the output of attributes of images in editor. Courtesy of SitePoint. http://www.sitepoint.com/wordpress-change-img-tag-html/
+function image_tag_class($class, $id, $align, $size) {
+	$align = 'align' . esc_attr($align);
+	return $align;
 }
-add_action('thematic_header','thematic_brandingopen',1);
-
-//custom header code
-include('library/control/controlheader.php');
-
-//You know what's dumb? Using PHPThumb when WordPress has a really good function that does the same thing built in. 
-	
-if ( function_exists( 'add_theme_support' ) ) {
-	add_theme_support( 'post-thumbnails' );
-    set_post_thumbnail_size( 200, 260 ); // default Post Thumbnail dimensions   
+add_filter('get_image_tag_class', 'image_tag_class', 0, 4);
+function image_tag($html, $id, $alt, $title) {
+	return preg_replace(array(
+			'/\s+width="\d+"/i',
+			'/\s+height="\d+"/i',
+			'/alt=""/i'
+		),
+		array(
+			'',
+			'',
+			'',
+			'alt="' . $title . '"'
+		),
+		$html);
 }
+add_filter('get_image_tag', 'image_tag', 0, 4);
 
-if ( function_exists( 'add_image_size' ) ) { 
-	add_image_size( 'head-thumb', 180, 150, true ); //(hard cropped)
-	add_image_size( 'slide-thumb', 196, 196, true ); //(hard cropped)
-	add_image_size( 'bnav-thumb', 75, 60, true ); //(hard cropped)
-}
-
-//Let's get fun places in there. We'll figure out how to fill them in a bit. 
-	
-function childtheme_override_blogtitle() { ?>
-
-				<div id="majorstory" class="headad">
-					<?php include('library/control/headstory-extension.php'); ?>
-				</div>
-				<div id="socialhead">
-					<?php include('library/control/socialicons-extension.php'); ?>
-				</div>
-				<div id="searchhead">
-					<?php include ( TEMPLATEPATH . '/searchform.php'); ?>
-				</div>
-				<div id="adrighthead" class="headad">
-					<?php if ( !function_exists('dynamic_sidebar')
-					|| !dynamic_sidebar('Ad Head Right') ) : ?>
-						<img src="<?php bloginfo('stylesheet_directory'); ?>/library/imgs/180x150TestAd.png" />
-					<?php endif; ?>
-				</div>
-				<div id="sitetitle">
-					<div id="logo">
-						<a href="<?php echo site_url(); ?>"><img src="<?php header_image(); ?>" width="<?php echo HEADER_IMAGE_WIDTH; ?>" height="<?php echo HEADER_IMAGE_HEIGHT; ?>" alt="<?php bloginfo('name'); ?>" title="<?php bloginfo('name'); ?>" /></a>
-					</div>
-					
-
-<?php 
-	
-	
-
-}add_action('thematic_header','thematic_blogtitle',3);
-
-
-//A tagline for profit and fun.
-
-function childtheme_override_blogdescription() { 
-
-			$blogdesc = '>' . get_bloginfo('description');
-
-	        	echo "\t\t<div id=\"tagline\" $blogdesc</div>\n\n";
-
-				echo "</div> <div class=\"clearfloat\"></div> <!--end sitetitle div-->";
-
-
-}add_action('thematic_header','thematic_blogdescription',5);
-
-
-
-
-//HTML5 markup FTW. Also, the slider. 
-
-include('library/control/navslider.php');
-
-/**Better safe than sorry, let's kill overflow posibilities */		
-function make_belowheader()
-{ ?>
-
-		<div class="clearfloat"></div>
-		
-<?php }
-add_action('thematic_belowheader','make_belowheader');
-
-
-/** Seriously... I hate having to rewrite numbers in CSS over and over again for body width. Let's just freaking give the width a class and add it to whatever the hell needs it, starting with the main div. **/
-
-function altermainclass() {
-?>
-	<script type="text/javascript" language="javascript">
-		/*<![CDATA[*/
-			jQuery(document).ready( function()
-			{
-				jQuery('#main').addClass('bclass');
-			});
-		/*]]>*/
-	</script>
-<?php
-}
-add_action( 'wp_head', 'altermainclass' );
-
-/**Who knows when the menu div may be used again, best to be specific in selections. This is just easier... honest.**/
-
-function altermenuclass() {
-?>
-	<script type="text/javascript" language="javascript">
-		/*<![CDATA[*/
-			jQuery(document).ready( function()
-			{
-				jQuery('#header nav .menu').addClass('bclass');
-			});
-		/*]]>*/
-	</script>
-<?php
-}
-add_action( 'wp_head', 'altermenuclass' );
-	
-//Adds some nifty social networks to your userprofile so I can call the shit out of them.
-function my_new_contactmethods( $contactmethods ) {
-    // Add Twitter
-    $contactmethods['twitter'] = 'Twitter name without the "@"';
-    //add Facebook
-    $contactmethods['facebookURL'] = 'Facebook profile URL'; 
-	//Add Google Plus. 
-	$contactmethods['gplusURL'] = 'Google Profile URL for authorid. Should look like https://plus.google.com/108109243710611392513/posts'; 
-    return $contactmethods;
-}
-add_filter('user_contactmethods','my_new_contactmethods',10,1);
-
-//Let's change some excerpt char numbers and keep styling in!
-//This does not apply if the poster uses the more tag. How to make that work?
-//Answer: No idea. Droping the text I want after the excerpt tag in the loop instead. Putting just a '...' in here instead. 
-
-function make_killer_excerpt( $text ) {
-	global $post;
-	if ( '' == $text ) {
-		$text = get_the_content('');
-		$text = apply_filters('the_content', $text);
-		$text = str_replace('\]\]\>', ']]&gt;', $text);
-		$text = preg_replace('@<script[^>]*?>.*?</script>@si', '', $text);
-		$text = strip_tags($text, '<p> <strong> <bold> <i> <em> <emphasis> <del> <h1> <h2> <h3> <h4> <h5>');
-		$excerpt_length = 200; //200 words for some reason... would prefer a char count. Not sure how to do it. 
-		$words = explode(' ', $text, $excerpt_length + 1);
-		if (count($words)> $excerpt_length) {
-		  array_pop($words);
-		  array_push($words, '...');
-		  $text = implode(' ', $words);
-		}
-	}
-return $text;
-}
-
-remove_filter('get_the_excerpt', 'wp_trim_excerpt');
-add_filter('get_the_excerpt', 'make_killer_excerpt');
-
-//Action to filter asides out of RSS feed.
-//Via http://wordpress.stackexchange.com/questions/18412/how-to-exclude-posts-of-a-certain-format-from-the-feed
-add_action( 'pre_get_posts', 'noaside_pre_get_posts' );
-function noaside_pre_get_posts( &$wp_query )
+// Customize the output of menus to fit the ZURB navigation style. Courtesy of Kriesi.at. http://www.kriesi.at/archives/improve-your-wordpress-navigation-menu-output
+class description_walker extends Walker_Nav_Menu
 {
-    if ( $wp_query->is_feed() ) {
-        $post_format_tax_query = array(
-            'taxonomy' => 'post_format',
-            'field' => 'slug',
-            'terms' => 'post-format-aside', // Change this to the format you want to exclude
-            'operator' => 'NOT IN'
-        );
-        $tax_query = $wp_query->get( 'tax_query' );
-        if ( is_array( $tax_query ) ) {
-            $tax_query = $tax_query + $post_format_tax_query;
-        } else {
-            $tax_query = array( $post_format_tax_query );
-        }
-        $wp_query->set( 'tax_query', $tax_query );
-    }
+	function start_el(&$output, $item, $depth, $args)
+	{
+		global $wp_query;
+		$indent = ( $depth ) ? str_repeat( "\t", $depth ) : '';
+		
+		$class_names = $value = '';
+		
+		$classes = empty( $item->classes ) ? array() : (array) $item->classes;
+		
+		$class_names = join( ' ', apply_filters( 'nav_menu_css_class', array_filter( $classes ), $item ) );
+		$class_names = ' class="'. esc_attr( $class_names ) . '"';
+		
+		$output .= $indent . '<dd id="menu-item-'. $item->ID . '-dd"' . $value . $class_names .'>';
+		
+		$attributes  = ! empty( $item->attr_title ) ? ' title="'  . esc_attr( $item->attr_title ) .'"' : '';
+		$attributes .= ! empty( $item->target )     ? ' target="' . esc_attr( $item->target     ) .'"' : '';
+		$attributes .= ! empty( $item->xfn )        ? ' rel="'    . esc_attr( $item->xfn        ) .'"' : '';
+		$attributes .= ! empty( $item->url )        ? ' href="'   . esc_attr( $item->url        ) .'"' : '';
+		
+		$prepend = '';
+		$append = '';
+		$description  = ! empty( $item->description ) ? '' : '';
+		
+		if($depth != 0)
+		{
+			$description = $append = $prepend = "";
+		}
+		
+		$item_output = $args->before;
+		$item_output .= '<a'. $attributes .'>';
+		$item_output .= $args->link_before .$prepend.apply_filters( 'the_title', $item->title, $item->ID ).$append;
+		$item_output .= $description.$args->link_after;
+		$item_output .= '</a>';
+		$item_output .= $args->after;
+		
+		$output .= apply_filters( 'walker_nav_menu_start_el', $item_output, $item, $depth, $args );
+	}
+	function end_el(&$output, $item, $depth) {
+		$output .= "</dd>\n";
+	}
 }
 
+// img unautop, Courtesy of Interconnectit http://interconnectit.com/2175/how-to-remove-p-tags-from-images-in-wordpress/
+function img_unautop($pee) {
+    $pee = preg_replace('/<p>\\s*?(<a .*?><img.*?><\\/a>|<img.*?>)?\\s*<\\/p>/s', '<figure>$1</figure>', $pee);
+    return $pee;
+}
+add_filter( 'the_content', 'img_unautop', 30 );
 
-include('library/extensions/sidebartop-extensions.php');
+// Presstrends
+function presstrends() {
 
+// Add your PressTrends and Theme API Keys
+$api_key = 'xc11x4vpf17icuwver0bhgbzz4uewlu5ql38';
+$auth = 'kw1f8yr8eo1op9c859qcqkm2jjseuj7zp';
+
+// NO NEED TO EDIT BELOW
+$data = get_transient( 'presstrends_data' );
+if (!$data || $data == ''){
+$api_base = 'http://api.presstrends.io/index.php/api/sites/add/auth/';
+$url = $api_base . $auth . '/api/' . $api_key . '/';
+$data = array();
+$count_posts = wp_count_posts();
+$count_pages = wp_count_posts('page');
+$comments_count = wp_count_comments();
+$theme_data = get_theme_data(get_stylesheet_directory() . '/style.css');
+$plugin_count = count(get_option('active_plugins'));
+$all_plugins = get_plugins();
+foreach($all_plugins as $plugin_file => $plugin_data) {
+$plugin_name .= $plugin_data['Name'];
+$plugin_name .= '&';
+}
+$data['url'] = stripslashes(str_replace(array('http://', '/', ':' ), '', site_url()));
+$data['posts'] = $count_posts->publish;
+$data['pages'] = $count_pages->publish;
+$data['comments'] = $comments_count->total_comments;
+$data['approved'] = $comments_count->approved;
+$data['spam'] = $comments_count->spam;
+$data['theme_version'] = $theme_data['Version'];
+$data['theme_name'] = $theme_data['Name'];
+$data['site_name'] = str_replace( ' ', '', get_bloginfo( 'name' ));
+$data['plugins'] = $plugin_count;
+$data['plugin'] = urlencode($plugin_name);
+$data['wpversion'] = get_bloginfo('version');
+foreach ( $data as $k => $v ) {
+$url .= $k . '/' . $v . '/';
+}
+$response = wp_remote_get( $url );
+set_transient('presstrends_data', $data, 60*60*24);
+}}
+add_action('admin_init', 'presstrends');
 ?>
