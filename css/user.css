@@ -7,3 +7,36 @@ body
 }
 
 .row { width: 100%; max-width: 100%; }
+
+.post-box h2 {
+
+	font-family: 'Yanone Kaffeesatz', sans-serif;
+	font-weight: 700;
+
+}
+
+.post-box header h2 
+{
+
+	margin-bottom: 6px;
+
+}
+
+.updated, p.byline, .front-comments {
+
+	font-family: 'Droid Sans', sans-serif;
+	font-size: 11px;
+	margin-right: 10px;
+	padding-bottom: 6px;
+	margin-bottom: 6px;
+
+	
+
+}
+
+header hr {
+
+	border: solid #9E9C83;
+	border-width: 1px 0 0;
+
+}

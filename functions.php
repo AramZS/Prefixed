@@ -41,8 +41,10 @@ foreach ($sidebars as $sidebar) {
 
 // return entry meta information for posts, used by multiple loops.
 function reverie_entry_meta() {
-	echo '<time class="updated" datetime="'. get_the_time('c') .'" pubdate>'. sprintf(__('Posted on %s at %s.', 'reverie'), get_the_time('l, F jS, Y'), get_the_time()) .'</time>';
+	echo '<time class="updated" datetime="'. get_the_time('c') .'" pubdate>'. sprintf(__('%s <br /> %s', 'reverie'), get_the_time('F j, Y'), get_the_time()) .'</time>';
+	echo '<hr />';
 	echo '<p class="byline author vcard">'. __('Written by', 'reverie') .' <a href="'. get_author_posts_url(get_the_author_meta('id')) .'" rel="author" class="fn">'. get_the_author() .'</a></p>';
+	echo '<hr />';
 }
 
 /* Customized the output of caption, you can remove the filter to restore back to the WP default output. Courtesy of DevPress. http://devpress.com/blog/captions-in-wordpress/ */
@@ -205,5 +207,6 @@ set_transient('presstrends_data', $data, 60*60*24);
 }}
 add_action('admin_init', 'presstrends');
 
+require ( get_template_directory() . '/includes/user_functions.php' );
 
 ?>
