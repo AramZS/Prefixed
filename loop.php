@@ -24,14 +24,17 @@
 		<?php endif; ?>
 			</div>
 		</div>
-		<div class="row">
-			<footer>
-				<div class="twelve columns">
-					<?php $tag = get_the_tags(); if (!$tag) { } else { ?><p><?php the_tags(); ?></p><?php } ?>
-				</div>
+		<div class="row <?php $tag = get_the_tags(); if (!$tag) { } else { ?>footrow<?php } ?>">
+			<div class="two columns <?php $tag = get_the_tags(); if (!$tag) { } else { ?>hash<?php } ?>">
+				<?php $tag = get_the_tags(); if (!$tag) { } else { ?>#<?php } ?>
+			</div>
+			<footer class="ten columns">
+				
+					<?php $tag = get_the_tags(); if (!$tag) { } else { ?><p><?php the_tags(''); ?></p><?php } ?>
+				
 			</footer>
 		</div>
-		<div class="row divider"></div>
+		<div class="row divider <?php $tag = get_the_tags(); if (!$tag) { } else { ?>taggedfoot<?php } ?>"></div>
 	</article>	
 
 <?php endwhile; // End the loop ?>

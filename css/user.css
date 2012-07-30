@@ -40,3 +40,25 @@ header hr {
 	border-width: 1px 0 0;
 
 }
+
+.footrow
+{
+
+	margin-top: 12px;
+	padding: 26px 0 0 0;
+	border-top: 1px inset #9C90AC;
+
+}
+
+.hash {
+
+	text-align: center;
+	font-size: 3.8em;
+
+}
+
+.taggedfoot {
+
+	margin-top: 0;
+
+}
