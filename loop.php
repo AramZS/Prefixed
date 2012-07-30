@@ -8,23 +8,27 @@
 
 <?php /* Start loop */ ?>
 <?php while (have_posts()) : the_post(); ?>
-	<article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
-		<header>
+
+	<article id="post-<?php the_ID(); ?>" <?php post_class('row'); ?>>
+		<header class="two columns">
 			<h2><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2>
 			<?php reverie_entry_meta(); ?>
 		</header>
-		<div class="entry-content">
+		<div class="entry-content ten columns">
 	<?php if (is_archive() || is_search()) : // Only display excerpts for archives and search ?>
 		<?php the_excerpt(); ?>
 	<?php else : ?>
 		<?php the_content('Continue reading...'); ?>
 	<?php endif; ?>
 		</div>
-		<footer>
-			<?php $tag = get_the_tags(); if (!$tag) { } else { ?><p><?php the_tags(); ?></p><?php } ?>
+		<footer class="row">
+			<div class="twelve columns">
+				<?php $tag = get_the_tags(); if (!$tag) { } else { ?><p><?php the_tags(); ?></p><?php } ?>
+			</div>
 		</footer>
-		<div class="divider"></div>
+		<div class="row divider"></div>
 	</article>	
+
 <?php endwhile; // End the loop ?>
 
 <?php /* Display navigation to next/previous pages when applicable */ ?>
