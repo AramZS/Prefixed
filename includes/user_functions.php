@@ -5,6 +5,7 @@ function font_setup() {
 	?>
 	
 		<link href='http://fonts.googleapis.com/css?family=Droid+Sans:400,700|Yanone+Kaffeesatz:400,700' rel='stylesheet' type='text/css'>	
+		<link href="<?php echo get_stylesheet_directory_uri(); ?>/kudos/kudos.css" media="screen" rel="stylesheet" type="text/css" />
 	
 	<?php
 
@@ -31,6 +32,9 @@ if ($floatWPVer >= 3.4){
 			#	wp_enqueue_script('header-imp', get_stylesheet_directory_uri() . '/includes/header-imp.js', array('waypoint'));
 				wp_enqueue_script('infiniscroll', get_stylesheet_directory_uri() . '/js/jquery.infinitescroll.js', array('jquery'));
 				wp_enqueue_script('scrollimp', get_stylesheet_directory_uri() . '/includes/scroll-imp.js', array('infiniscroll'));
+				wp_enqueue_script('jqcookie', get_stylesheet_directory_uri() . '/kudos/jquery.cookie.js', array('jquery'));
+				wp_enqueue_script('kudos', get_stylesheet_directory_uri() . '/kudos/kudos.js', array('jqcookie'));
+				
 				
 		}
 
@@ -47,10 +51,14 @@ if ($floatWPVer >= 3.4){
 					#	wp_enqueue_script('header-imp', get_stylesheet_directory_uri() . '/includes/header-imp.js', array('waypoint'));
 						wp_enqueue_script('infiniscroll', get_stylesheet_directory_uri() . '/js/jquery.infinitescroll.js', array('jquery'));
 						wp_enqueue_script('scrollimp', get_stylesheet_directory_uri() . '/includes/scroll-imp.js', array('infiniscroll'));
-						
+						wp_enqueue_script('jqcookie', get_stylesheet_directory_uri() . '/kudos/jquery.cookie.js', array('jquery'));
+						wp_enqueue_script('kudos', get_stylesheet_directory_uri() . '/kudos/kudos.js', array('jqcookie'));
+				
 		}
 		add_action('wp_enqueue_scripts', 'jq_enqueue');
 }
+
+
 
 
 ?>

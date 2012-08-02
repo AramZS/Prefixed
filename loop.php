@@ -17,11 +17,26 @@
 				<span class="front-comments"><?php comments_popup_link( 'Add a comment', 'One comment', '% comments', 'comments-link', ''); ?></span>
 			</header>
 			<div class="entry-content ten columns">
+				<div class="row">
+<?php $kudos = get_post_meta($post->ID, '_wp-svbtle-kudos', true); 
+						if ($kudos > "") { $kudos = $kudos; } else { $kudos = "0"; } ?>
+		<figure class="kudo">	
+			<a class="kudos kudoable" id="kudos-<?php the_ID(); ?>">
+				<div class="circle"><div class="filled">&nbsp;</div></div>
+				<p class="count"><span id="kudos-<?php the_ID(); ?>-count" class="identifier">0</span> <span class="identifier">Kudos</p>
+			</a>
+			<div class="pbar"><div class="progress">&nbsp;</div></div>
+		</figure>
+		
+				
+				</div>
+				<div class="row">
 		<?php if (is_archive() || is_search()) : // Only display excerpts for archives and search ?>
 			<?php the_excerpt(); ?>
 		<?php else : ?>
 			<?php the_content('Continue reading...'); ?>
 		<?php endif; ?>
+				</div>
 			</div>
 		</div>
 		<div class="row <?php $tag = get_the_tags(); if (!$tag) { } else { ?>footrow<?php } ?>">
