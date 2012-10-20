@@ -240,7 +240,6 @@ function add_opengraph_single() {
 		elseif (class_exists('WDS_OnPage')) {
 			$ogposttitle = $WDS_OnPage->wds_title('');
 		} elseif (!empty(get_post_meta($post->ID, "_aioseop_title", true))){
-			$AIOSEOP = new All_in_One_SEO_Pack;
 			$title = $AIOSEOP->internationalize(get_post_meta($post->ID, "_aioseop_title", true));
 		}
 		else {
@@ -248,6 +247,32 @@ function add_opengraph_single() {
 		}
 		echo '<meta property="og:title" content="' . $ogposttitle . '"/>';
 		
+		# OG Descrip
+		if (!empty($AIOSEOPDescrip) {
+			$ogdescrip = $AIOSEOPDescrip;
+			?><meta property="og:description" content="<?php echo $ogdescrip; ?>" /><?php
+		} elseif (!empty($WDS_OnPage->wds_metadesc())) {
+			$WDS_OnPage->wds_metadesc();
+		} elseif (!empty($post->post_excerpt)) {
+			$theexcerptuse = get_the_excerpt();
+			$theexcerptclean = strip_tags($theexcerptuse);
+					
+			if (strlen($theexcerptclean) > 300){
+				$nativedescription = substr($theexcerptclean, 0, 295) . '...'; 
+			} else {
+				$nativedescription = $theexcerptclean;	
+			}
+					
+			?><meta property="og:description" content="<?php echo $nativedescription; ?>" /><?php		
+		} else {
+			$thecontentforexcerpt = $post->post_content;
+			$theexcerptclean = strip_tags($thecontentforexcerpt);
+			$nativedescription = substr($theexcerptclean, 0, 295) . '...';
+			?><meta property="og:description" content="<?php echo $nativedescription; ?>" /><?php		
+		}
+		
+		?><meta property="og:type" content="article" /><?php
+		?><meta property="og:site_name" content="<?php bloginfo('name'); ?>"/><?php
 	}
 }
 
