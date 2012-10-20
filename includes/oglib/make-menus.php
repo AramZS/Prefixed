@@ -6,7 +6,7 @@
 add_action('admin_menu', 'thatcamp_admin_add_page');
 function thatcamp_admin_add_page() {
 	//Add that options page title, menu item, user capability, the slug to refer to, the output function. 
-	add_options_page('Syndication', 'THATCamp Options', 'manage_options', 'tc', 'tc_options_page');
+	add_options_page('Syndication', 'Syndication Options', 'manage_options', 'tc', 'tc_options_page');
 }
 
 // display the admin options page
