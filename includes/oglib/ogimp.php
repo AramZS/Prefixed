@@ -220,15 +220,34 @@ function add_opengraph_single() {
 		global $post;
 		//If it is a post with an ID, set the ID.
 		if (is_object($postID)) $postID = $post->ID;
+		
+		if (class_exists('All_in_One_SEO_Pack')){
+			$AIOSEOP = new All_in_One_SEO_Pack;
+			$AIOSEOPDescrip = $AIOSEOP->get_post_description($post);
+		}
+		
+		if (class_exists('WDS_OnPage')){
+			$WDS_OnPage = new WDS_OnPage;
+		}
 
+		# OG Title
 		
 		//Get the meta data containing the information
-		if (!empty($ogposttitle = get_post_meta($postID, 'ogposttitle', true)){
+		if (!empty($ogNativePostTitle = get_post_meta($postID, 'ogposttitle', true)){
 			//If there is anything there, output it.
-			echo '<meta property="og:title" content="' . $ogposttitle . '"/>';
-		} else {
-			echo '<meta property="og:title" content="' . strip_tags($post->post_title) . '"/>';
+			$ogposttitle = $ogNativePostTitle;
+		} 
+		elseif (class_exists('WDS_OnPage')) {
+			$ogposttitle = $WDS_OnPage->wds_title('');
+		} elseif (!empty(get_post_meta($post->ID, "_aioseop_title", true))){
+			$AIOSEOP = new All_in_One_SEO_Pack;
+			$title = $AIOSEOP->internationalize(get_post_meta($post->ID, "_aioseop_title", true));
 		}
+		else {
+			$ogposttitle = strip_tags($post->post_title);
+		}
+		echo '<meta property="og:title" content="' . $ogposttitle . '"/>';
+		
 	}
 }
 
